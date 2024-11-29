@@ -1,4 +1,5 @@
 #include <stack>
+#include <functional>
 
 namespace AVLTree {
 
