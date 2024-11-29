@@ -12,7 +12,7 @@ set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/my_avl_tree)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wpedantic -g -O0 -D DEBUG\
                            -Wmissing-declarations -Wcast-align     \
-                           -Wunnused -Wshadow --Wsign-conversion   \
+                           -Wunused -Wshadow -Wsign-conversion     \
                            -fsanitize=address -fsanitize=undefined")
 
 add_subdirectory(standard_set)
