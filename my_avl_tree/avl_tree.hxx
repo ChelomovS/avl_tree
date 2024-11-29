@@ -338,7 +338,7 @@ public:
 };
 
 template <typename ElemT, typename Comparator = std::less<ElemT>>
-long range_query(const avl_tree<ElemT, Comparator>& tree, const ElemT& first, const ElemT& second) {
+int range_query(const avl_tree<ElemT, Comparator>& tree, const ElemT& first, const ElemT& second) {
     if (first > second) 
         return 0;
         

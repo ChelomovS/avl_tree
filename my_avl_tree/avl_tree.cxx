@@ -9,7 +9,7 @@ int main() {
     char c;
     int value;
     int first, second;
-    size_t number_of_range_query;
+    int number_of_range_query;
 
     std::chrono::duration<double> total_time{0};
 
