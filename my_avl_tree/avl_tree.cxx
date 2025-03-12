@@ -27,6 +27,7 @@ int main() {
                 return EXIT_FAILURE;
             }
             number_of_range_query = AVLTree::range_query(search_tree, first, second);
+            std::cout << number_of_range_query << " ";
         }
 
         else {

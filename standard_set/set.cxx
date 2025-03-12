@@ -1,6 +1,5 @@
 #include <iostream>
 #include <set>
-
 namespace {
 const char KEY = 'k';
 const char QUERY = 'q';
@@ -22,7 +21,7 @@ int main() {
     char c;
     int value;
     int first, second;
-    long number_of_range_query;
+    long number_of_range_query = 0;
 
     while (std::cin >> c) {
         if (c == KEY) {
@@ -30,7 +29,6 @@ int main() {
                 std::cerr << "Error input" << std::endl;
                 return EXIT_FAILURE;
             }
-            set.insert(value);
         }
 
         else if (c == QUERY) {
@@ -38,7 +36,7 @@ int main() {
                 std::cerr << "Error input" << std::endl;
                 return EXIT_FAILURE;
             }
-            number_of_range_query = range_query(set, first, second);
+            std::cout << number_of_range_query << " ";
         }
 
         else {

@@ -264,34 +264,30 @@ public:
     }
 
     void delete_tree() {
-        avl_node<ElemT>* curr = root_;
+        if (!root_)
+            return;
 
-        while (curr != nullptr)
-        {
-            if (curr->left_)
-                curr = curr->left_;
+        std::stack<avl_node<ElemT>*> stack;
+        avl_node<ElemT>* current = root_;
+        avl_node<ElemT>* last = nullptr;
 
-            else if (curr->right_)
-                curr = curr->right_;
-
-            else
-            {
-                if (curr == root_)
-                    break;
-                
-                avl_node<ElemT>* parent = curr->parent_;
-
-                if (curr == parent->left_)
-                    parent->left_  = nullptr;
-
-                else if (curr == parent->right_)
-                    parent->right_ = nullptr;
-
-                delete curr;
-
-                curr = parent;
+        while (current || !stack.empty()) {
+            if (current) {
+                stack.push(current);
+                current = current->left_;
+            } else {
+                avl_node<ElemT>* top = stack.top();
+                if (top->right_ && (last != top->right_)) {
+                    current = top->right_;
+                } else {
+                    stack.pop();
+                    delete top;
+                    last = top;
+                    current = nullptr;
+                }
             }
         }
+        root_ = nullptr;
     }
 
     avl_node<ElemT>* lower_bound(const ElemT& value) const {
