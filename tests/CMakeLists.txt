@@ -9,10 +9,9 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) 
 
-aux_source_directory(unit UNIT_TESTS)
+aux_source_directory(unit_tests UNIT_TESTS_1)
 
-add_executable(unit_tests ${UNIT_TESTS})
-
+add_executable(unit_tests ${UNIT_TESTS_1})
 target_include_directories(unit_tests PRIVATE ${INCLUDE_DIR} ${GTEST_INCLUDE_DIRS})
 
 find_package(GTest REQUIRED)
