@@ -71,6 +71,7 @@ public:
     avl_tree() {}
 
 private:
+    private:
     avl_node<ElemT>* safe_copy(const avl_node<ElemT>* src_root) {
         if (!src_root) return nullptr;
 
@@ -82,6 +83,7 @@ private:
             new_root_ptr = new_root.get();
             allocated_nodes.push_back(std::move(new_root));
 
+            // Копируем значение ПЕРЕД установкой связей
             new_root_ptr->value_ = src_root->value_;
             new_root_ptr->height_ = 1;
             new_root_ptr->size_of_subtree_ = 1;
@@ -95,29 +97,29 @@ private:
 
                 if (src_node->right_) {
                     auto right = std::make_unique<avl_node<ElemT>>();
-                    avl_node<ElemT>* right_ptr = right.get();
-                    allocated_nodes.push_back(std::move(right));
-
-                    right_ptr->parent_ = current;
-                    current->right_ = right_ptr;
+                    auto* right_ptr = right.get();
+                    
                     right_ptr->value_ = src_node->right_->value_;
                     right_ptr->height_ = 1;
                     right_ptr->size_of_subtree_ = 1;
-
+                    
+                    right_ptr->parent_ = current;
+                    current->right_ = right_ptr;
+                    allocated_nodes.push_back(std::move(right));
                     stack.emplace(src_node->right_, right_ptr);
                 }
 
                 if (src_node->left_) {
                     auto left = std::make_unique<avl_node<ElemT>>();
-                    avl_node<ElemT>* left_ptr = left.get();
-                    allocated_nodes.push_back(std::move(left));
-
-                    left_ptr->parent_ = current;
-                    current->left_ = left_ptr;
+                    auto* left_ptr = left.get();
+                    
                     left_ptr->value_ = src_node->left_->value_;
                     left_ptr->height_ = 1;
                     left_ptr->size_of_subtree_ = 1;
-
+                    
+                    left_ptr->parent_ = current;
+                    current->left_ = left_ptr;
+                    allocated_nodes.push_back(std::move(left));
                     stack.emplace(src_node->left_, left_ptr);
                 }
             }
@@ -139,16 +141,10 @@ private:
                     }
                 }
             }
-
-            for (auto& ptr : allocated_nodes) {
-                ptr.release();
-            }
-
+            for (auto& ptr : allocated_nodes) ptr.release();
             return new_root_ptr;
+
         } catch (...) {
-            for (auto& ptr : allocated_nodes) {
-                ptr.reset();
-            }
             throw;
         }
     }
@@ -228,12 +224,12 @@ private:
 
 public:
     void insert(const ElemT& elem_to_insert) {
-        avl_node<ElemT>* parent = nullptr;
         std::unique_ptr<avl_node<ElemT>> new_node;
+        avl_node<ElemT>* parent = nullptr;
 
         try {
             if (!root_) {
-                new_node = std::make_unique<avl_node<ElemT>>(elem_to_insert);
+                new_node.reset(new avl_node<ElemT>(elem_to_insert));
                 root_ = new_node.release();
                 return;
             }
@@ -250,33 +246,28 @@ public:
                 }
             }
 
-            new_node = std::make_unique<avl_node<ElemT>>(elem_to_insert, parent);
-            avl_node<ElemT>* raw_new_node = new_node.get();
+            new_node.reset(new avl_node<ElemT>(elem_to_insert, parent));
+            avl_node<ElemT>* raw_node = new_node.get();
 
             if (cmp_(elem_to_insert, parent->value_)) {
-                parent->left_ = raw_new_node;
+                parent->left_ = raw_node;
             } else {
-                parent->right_ = raw_new_node;
+                parent->right_ = raw_node;
             }
 
-            std::vector<avl_node<ElemT>*> path;
-            avl_node<ElemT>* node = raw_new_node;
-
+            avl_node<ElemT>* node = raw_node;
             while (node) {
                 node = balance(node);
-                path.push_back(node);
                 node = node->parent_;
             }
 
-            new_node.release();
+            new_node.release(); 
 
         } catch (...) {
+         
             if (parent) {
-                if (parent->left_ == new_node.get()) {
-                    parent->left_ = nullptr;
-                } else if (parent->right_ == new_node.get()) {
-                    parent->right_ = nullptr;
-                }
+                if (parent->left_ == new_node.get()) parent->left_ = nullptr;
+                if (parent->right_ == new_node.get()) parent->right_ = nullptr;
             }
             throw;
         }
