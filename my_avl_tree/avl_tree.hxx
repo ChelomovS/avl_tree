@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <vector>
 
 namespace AVLTree {
 
@@ -22,12 +23,12 @@ public:
     avl_node* left_ = nullptr;
     avl_node* right_ = nullptr;
     int height_;
-    int size_of_subtree_;
+    size_t size_of_subtree_;
 
 public:
     avl_node() {}
     avl_node(const ElemT& value, avl_node* parent = nullptr, avl_node* left = nullptr, avl_node* right = nullptr,
-             int height = 1, int size_of_subtree = 1):
+             int height = 1, size_t size_of_subtree = 1): 
              value_{value}, parent_{parent}, left_{left}, right_{right}, height_{height}, size_of_subtree_{size_of_subtree} {} 
 };
 
@@ -37,7 +38,7 @@ int get_height(const avl_node<ElemT>* node) {
 }
 
 template <typename ElemT>
-int get_size_of_subtree(const avl_node<ElemT>* node) {
+size_t get_size_of_subtree(const avl_node<ElemT>* node) { 
     return node ? node->size_of_subtree_ : 0;
 }
 
@@ -55,8 +56,8 @@ void fix_height_and_size_of_subtree(avl_node<ElemT>* node) {
     int height_of_right = get_height(node->right_);
     node->height_       = 1 + std::max(height_of_left, height_of_right);
 
-    int size_left          = get_size_of_subtree(node->left_);
-    int size_right         = get_size_of_subtree(node->right_);
+    size_t size_left    = get_size_of_subtree(node->left_); 
+    size_t size_right   = get_size_of_subtree(node->right_); 
     node->size_of_subtree_ = 1 + size_left + size_right;
 }
 
@@ -71,74 +72,79 @@ public:
 
 private:
     avl_node<ElemT>* safe_copy(const avl_node<ElemT>* src_root) {
-        if (!src_root) 
-            return nullptr;
+        if (!src_root) return nullptr;
 
+        std::vector<avl_node<ElemT>*> allocated_nodes;
         avl_node<ElemT>* new_root = nullptr;
 
         try {
-            new_root = new avl_node<ElemT>;
-            new_root->parent_ = nullptr;
-            new_root->left_   = nullptr;
-            new_root->right_  = nullptr;
-            new_root->value_  = src_root->value_;
-            new_root->height_ = src_root->height_;
-            new_root->size_of_subtree_ = src_root->size_of_subtree_;
+            new_root = new avl_node<ElemT>();
+            allocated_nodes.push_back(new_root);
+
+            new_root->value_ = src_root->value_;
+            new_root->height_ = 1; 
+            new_root->size_of_subtree_ = 1;
 
             std::stack<std::pair<const avl_node<ElemT>*, avl_node<ElemT>*>> stack;
             stack.emplace(src_root, new_root);
 
             while (!stack.empty()) {
-                auto [src_node, new_node] = stack.top();
+                auto [src_node, current] = stack.top();
                 stack.pop();
 
                 if (src_node->right_) {
-                    auto right_child = new avl_node<ElemT>;
-                    right_child->parent_ = new_node;
-                    right_child->left_   = nullptr;
-                    right_child->right_  = nullptr;
-                    right_child->value_  = src_node->right_->value_;
-                    right_child->height_ = src_node->right_->height_;
-                    right_child->size_of_subtree_ = src_node->right_->size_of_subtree_;
-                    new_node->right_ = right_child;
+                    avl_node<ElemT>* right = new avl_node<ElemT>();
+                    allocated_nodes.push_back(right);
+                    right->parent_ = current;
+                    current->right_ = right;
+                    right->value_ = src_node->right_->value_;
+                    right->height_ = 1;
+                    right->size_of_subtree_ = 1;
 
-                    stack.emplace(src_node->right_, right_child);
+                    stack.emplace(src_node->right_, right);
                 }
 
                 if (src_node->left_) {
-                    auto left_child = new avl_node<ElemT>;
-                    left_child->parent_ = new_node;
-                    left_child->left_   = nullptr;
-                    left_child->right_  = nullptr;
-                    left_child->value_  = src_node->left_->value_;
-                    left_child->height_ = src_node->left_->height_;
-                    left_child->size_of_subtree_ = src_node->left_->size_of_subtree_;
-                    new_node->left_ = left_child;
+                    avl_node<ElemT>* left = new avl_node<ElemT>();
+                    allocated_nodes.push_back(left);
+                    left->parent_ = current;
+                    current->left_ = left;
+                    left->value_ = src_node->left_->value_;
+                    left->height_ = 1;
+                    left->size_of_subtree_ = 1;
 
-                    stack.emplace(src_node->left_, left_child);
+                    stack.emplace(src_node->left_, left);
                 }
             }
-        } catch (...) {
-            if (new_root) {
-                std::stack<avl_node<ElemT>*> del_stack;
-                del_stack.push(new_root);
 
-                while (!del_stack.empty()) {
-                    auto node = del_stack.top();
-                    del_stack.pop();
-                    if (node->left_) 
-                        del_stack.push(node->left_);
-                    if (node->right_) 
-                        del_stack.push(node->right_);
+            std::stack<std::pair<avl_node<ElemT>*, bool>> post_stack;
+            post_stack.push({new_root, false});
 
-                    delete node;
+            while (!post_stack.empty()) {
+                auto [current, visited] = post_stack.top();
+                post_stack.pop();
+
+                if (current) {
+                    if (!visited) {
+                        post_stack.push({current, true});
+                        if (current->right_) post_stack.push({current->right_, false});
+                        if (current->left_) post_stack.push({current->left_, false});
+                    } else {
+                        fix_height_and_size_of_subtree(current);
+                    }
                 }
+            }
+
+            allocated_nodes.clear();
+            return new_root;
+
+        } catch (...) {
+            for (auto node : allocated_nodes) {
+                delete node;
             }
             throw;
         }
-
-        return new_root;
-    } 
+    }
 
     avl_node<ElemT>* rotate_right(avl_node<ElemT>* p) {
         auto q = p->left_;
@@ -190,7 +196,6 @@ private:
 
         return p;
     }
-
 
     avl_node<ElemT>* balance(avl_node<ElemT>* node) {
         fix_height_and_size_of_subtree(node);
@@ -323,11 +328,11 @@ public:
         return result;
     }
 
-    int get_num_nodes_less_then_cur(const avl_node<ElemT>* node) const {
+    size_t get_num_nodes_less_then_cur(const avl_node<ElemT>* node) const { 
         if (!node) 
             return 0;
 
-        int number_of_nodes = get_size_of_subtree(node->left_);
+        size_t number_of_nodes = get_size_of_subtree(node->left_);
         const avl_node<ElemT>* current = node;
         const avl_node<ElemT>* parent  = node->parent_;
 
@@ -343,7 +348,7 @@ public:
         return number_of_nodes;
     }
 
-    int my_distance(const avl_node<ElemT>* lower, const avl_node<ElemT>* upper) const {
+    size_t my_distance(const avl_node<ElemT>* lower, const avl_node<ElemT>* upper) const { 
         if (!root_)
             return 0;
 
@@ -353,7 +358,10 @@ public:
         if (!upper)
             return get_size_of_subtree(root_) - get_num_nodes_less_then_cur(lower);
 
-        return get_num_nodes_less_then_cur(upper) - get_num_nodes_less_then_cur(lower);
+        size_t upper_count = get_num_nodes_less_then_cur(upper);
+        size_t lower_count = get_num_nodes_less_then_cur(lower);
+        
+        return (upper_count >= lower_count) ? (upper_count - lower_count) : 0;
     }
 
 public:
@@ -402,7 +410,7 @@ public:
 };
 
 template <typename ElemT, typename Comparator = std::less<ElemT>>
-int range_query(const avl_tree<ElemT, Comparator>& tree, const ElemT& first, const ElemT& second) {
+size_t range_query(const avl_tree<ElemT, Comparator>& tree, const ElemT& first, const ElemT& second) { 
     if (first > second) 
         return 0;
         

@@ -178,53 +178,6 @@ TEST(AVL_TREE_EXCEPTION_SAFETY, сopy_strong_garantee) {
     }
 }
 
-
-#if 0
-TEST(AVL_TREE_FUNCTIONS, exception_safety_insert) {
-    AVLTree::avl_tree<Controllable, comparator_for_controllable> source_tree;
-
-    bool exeption_thrown = false;
-
-    for (int i = 0; i < 10; ++i) {
-        try {
-            source_tree.insert(Controllable());
-        } catch (...) {
-            std::cerr << "Catch" << std::endl; 
-            exeption_thrown = true;
-        }
-    }
-
-    ASSERT_TRUE(exeption_thrown);
-}
-
-TEST(AVL_TREE_FUNCTIONS, move_assigmet) {
-    AVLTree::avl_tree<Controllable, comparator_for_controllable> source_tree;
-
-    Controllable::control = 4;
-
-    bool exeption_thrown = false;
-
-    for (int i = 0; i < 10; ++i) {
-        try {
-            source_tree.insert(Controllable());
-            std::cerr << "INSERT "<< std::endl;
-        } catch (...) {
-            std::cerr << "INSERT ISKL "<< std::endl; 
-        }
-    }
-
-    try {
-        AVLTree::avl_tree<Controllable, comparator_for_controllable> copy_tree = source_tree;
-        std::cerr << "move" << std::endl; 
-    } catch (...) {
-        std::cerr << "Catch" << std::endl; 
-        exeption_thrown = true;
-    }
-
-    ASSERT_TRUE(exeption_thrown);
-}
-#endif
-
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
 
