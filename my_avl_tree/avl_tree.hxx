@@ -135,7 +135,6 @@ private:
                 }
             }
 
-            allocated_nodes.clear();
             return new_root;
 
         } catch (...) {
